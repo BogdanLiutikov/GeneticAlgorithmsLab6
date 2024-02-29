@@ -5,8 +5,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>evocomp</groupId>
-    <artifactId>lab1</artifactId>
+    <artifactId>lab6</artifactId>
     <version>6.6.6</version>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
     <dependency>

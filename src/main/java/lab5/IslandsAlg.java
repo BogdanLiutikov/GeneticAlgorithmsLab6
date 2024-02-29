@@ -15,11 +15,38 @@ import java.util.Random;
 
 public class IslandsAlg {
 
+    private static double best_fit;
+    private static long run_time;
+
     public static void main(String[] args) {
+        for (int complexity = 1; complexity <= 5; complexity++) {
+//            System.out.println("Complexity " + (complexity));
+            int N = 51;
+            double[] fitness = new double[N];
+            long[] time = new long[N];
+            for (int i = 0; i < N; i++) {
+                best_fit = 0;
+                run_time = 0;
+                run(complexity);
+                fitness[i] = best_fit;
+                time[i] = run_time;
+            }
+
+//            System.out.printf("Среднее время выполнения в секундах: %f%n", Arrays.stream(time).average().getAsDouble() / 1000);
+//            System.out.printf("Средний резутьтат: %f%n", Arrays.stream(fitness).average().getAsDouble());
+            System.out.printf("%f %f%n", Arrays.stream(time).average().getAsDouble() / 1000, Arrays.stream(fitness).average().getAsDouble());
+
+        }
+    }
+
+    public static void run(int complexity) {
         int dimension = 50; // dimension of problem
-        int complexity = 1; // fitness estimation time multiplicator
-        int populationSize = 50; // size of population
-        int generations = 10; // number of generations
+//        int complexity = 1; // fitness estimation time multiplicator
+        int islandCount = 5;
+        int islandPopulationSize = 20;
+        int populationSize = 100 / islandCount; // size of population
+        int epochLength = 50;
+        int generations = 1000 / epochLength; // number of generations
 
         Random random = new Random(); // random
 
@@ -33,25 +60,31 @@ public class IslandsAlg {
         SelectionStrategy<Object> selection = new RouletteWheelSelection(); // Selection operator
 
         FitnessEvaluator<double[]> evaluator = new MultiFitnessFunction(dimension, complexity); // Fitness function
-
-        IslandEvolution<double[]> island_model = null; // your model;
+        RingMigration migration = new RingMigration();
+        IslandEvolution<double[]> island_model = new IslandEvolution<>(islandCount, migration, factory,
+                pipeline, evaluator, selection, random); // your model;
 
         island_model.addEvolutionObserver(new IslandEvolutionObserver() {
             public void populationUpdate(PopulationData populationData) {
                 double bestFit = populationData.getBestCandidateFitness();
-                System.out.println("Epoch " + populationData.getGenerationNumber() + ": " + bestFit);
-                System.out.println("\tEpoch best solution = " + Arrays.toString((double[])populationData.getBestCandidate()));
+//                System.out.println("Epoch " + populationData.getGenerationNumber() + ": " + bestFit);
+//                System.out.println("\tEpoch best solution = " + Arrays.toString((double[]) populationData.getBestCandidate()));
             }
 
             public void islandPopulationUpdate(int i, PopulationData populationData) {
                 double bestFit = populationData.getBestCandidateFitness();
-                System.out.println("Island " + i);
-                System.out.println("\tGeneration " + populationData.getGenerationNumber() + ": " + bestFit);
-                System.out.println("\tBest solution = " + Arrays.toString((double[])populationData.getBestCandidate()));
+//                System.out.println("Island " + i);
+//                System.out.println("\tGeneration " + populationData.getGenerationNumber() + ": " + bestFit);
+//                System.out.println("\tBest solution = " + Arrays.toString((double[]) populationData.getBestCandidate()));
+                if (bestFit > best_fit)
+                    best_fit = bestFit;
             }
         });
 
         TerminationCondition terminate = new GenerationCount(generations);
-        island_model.evolve(populationSize, 1, 50, 2, terminate);
+        long start = System.currentTimeMillis();
+        island_model.evolve(populationSize, 1, epochLength, 2, terminate);
+        long end = System.currentTimeMillis();
+        run_time = end - start;
     }
 }
